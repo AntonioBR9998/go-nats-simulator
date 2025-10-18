@@ -1,0 +1,23 @@
+services:
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["-js"]
+    restart: unless-stopped
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: timescale-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: sensors
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    restart: unless-stopped
+volumes:
+  timescale_data:
