@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "setting up NATS and timescaleDB"
+echo "setting up architecture"
 docker compose up -d
 
 echo "waiting for timescaleDB be ready"
