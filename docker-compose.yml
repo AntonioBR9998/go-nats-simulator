@@ -19,5 +19,18 @@ services:
     volumes:
       - timescale_data:/var/lib/postgresql/data
     restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: gan/Dockerfile
+    container_name: api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nats
+      - timescaledb
+    volumes:
+      - ./gan/config_test.json:/etc/gan/config_test.json:ro
+    restart: unless-stopped
 volumes:
   timescale_data:
