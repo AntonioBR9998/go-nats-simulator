@@ -2,7 +2,7 @@
 set -e
 
 echo "setting up architecture"
-docker compose up -d
+docker compose up --build -d
 
 echo "waiting for timescaleDB be ready"
 until docker exec -it timescale-db pg_isready -U admin > /dev/null 2>&1; do
@@ -17,9 +17,9 @@ docker exec -i timescale-db psql -U admin -d sensors -c "
 CREATE TYPE device_type AS ENUM ('humidity', 'temperature', 'pressure');"
 docker exec -i timescale-db psql -U admin -d sensors -c "
 CREATE TABLE IF NOT EXISTS devices (
-    id VARCHAR PRIMARY KEY,
+    id UUID PRIMARY KEY,
     type device_type NOT NULL,
-    alias INTEGER NOT NULL,
+    alias TEXT NOT NULL,
     rate INTEGER NOT NULL,
     max_threshold INTEGER NOT NULL,
     min_threshold INTEGER NOT NULL,
@@ -29,9 +29,9 @@ CREATE TABLE IF NOT EXISTS devices (
 echo "creating metrics table"
 docker exec -i timescale-db psql -U admin -d sensors -c "
 CREATE TABLE IF NOT EXISTS metrics (
-    sensor_id VARCHAR NOT NULL,
+    sensor_id UUID NOT NULL,
     value REAL NOT NULL,
-    unit VARCHAR NOT NULL,
+    unit TEXT NOT NULL,
     timestamp BIGINT NOT NULL
 );"
 docker exec -i timescale-db psql -U admin -d sensors -c "
