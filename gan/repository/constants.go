@@ -20,5 +20,6 @@ const (
 	GET_SENSORS = `
         SELECT
 			` + DEVICE_FIELDS + `
-        FROM devices;`
+        FROM devices
+		WHERE TRUE` // This botched job is neccessary for adding filters in query
 )
