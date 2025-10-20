@@ -60,6 +60,9 @@ func (s *service) CreateSensor(ctx context.Context,
 		return nil, err
 	}
 
+	// Adding sensor to simulator
+	go s.simulator.Start(sensor.ID, sensor.Type, sensor.Rate)
+
 	return sensor, nil
 }
 
@@ -105,6 +108,9 @@ func (s *service) ModifySensor(ctx context.Context,
 		return nil, err
 	}
 
+	// Replacing sensor in simulator
+	go s.simulator.Start(sensor.ID, sensor.Type, sensor.Rate)
+
 	return sensor, nil
 }
 
@@ -133,6 +139,9 @@ func (s *service) DeleteSensor(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
+
+	// Deleting sensor in simulator
+	s.simulator.Stop(id)
 
 	return nil
 }
