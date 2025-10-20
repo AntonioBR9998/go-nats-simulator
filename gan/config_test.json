@@ -1,0 +1,24 @@
+{
+  "api": {
+    "schema": "http",
+    "address": "0.0.0.0",
+    "port":8080
+  },
+  "log": {
+    "filePath": "",
+    "level": "DEBUG"
+  },
+  "nats": {
+    "host": "nats://nats",
+    "port": 4222
+  },
+  "timescaleDB": {
+    "host": "timescale-db",
+    "port": 5432,
+    "user": "admin",
+    "password": "admin",
+    "dbName": "sensors",
+    "sslMode": "disable"
+  },
+  "serverName": "localhost"
+}

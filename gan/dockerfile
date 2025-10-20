@@ -1,0 +1,20 @@
+FROM golang:1.25.0-trixie AS builder
+
+WORKDIR /gan
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /api ./gan
+
+FROM debian:bookworm-slim AS runtime
+
+WORKDIR /gan
+
+COPY --from=builder /api .
+
+EXPOSE 8080
+
+ENTRYPOINT ["./api", "-c", "/etc/gan/config_test.json"]
