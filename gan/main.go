@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/AntonioBR9998/go-nats-simulator/utils"
+	"github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/repository"
+	"github.com/AntonioBR9998/go-nats-simulator/gan/simulator"
 )
 
 const (
@@ -72,7 +74,9 @@ func startGanService(ctx *cli.Context) error {
 	repository := repository.NewRepository(*cfg)
 
 	log.Traceln("creating service layer")
-	service := domain.NewService(repository, *cfg)
+	natsClient, _ := nats.Connect(cfg.Nats.Host + ":" + cfg.Nats.Port)
+	sensorManager := simulator.NewManager(natsClient)
+	service := domain.NewService(repository, *cfg, sensorManager)
 
 	log.Traceln("creating REST API layer")
 	s := server.NewAPI(*cfg, service)
