@@ -114,6 +114,7 @@ func (r *repository) GetSensors(ctx context.Context) ([]*entity.Sensor, error) {
 	log.Infof("Time counting sensors: %v", time.Since(prev))
 
 	if err != nil {
+		log.Errorf("Error while counting sensors: %v \n query: %s", err, countQuery)
 		return nil, errors.TrackError(err)
 	}
 
@@ -131,7 +132,7 @@ func (r *repository) GetSensors(ctx context.Context) ([]*entity.Sensor, error) {
 
 	rows, err := r.timescaleDbClient.Query(queryTemplate, args...)
 	if err != nil {
-		log.Errorf("Error executing query: %v", err)
+		log.Errorf("Error executing query: %s \n error: %v", queryTemplate, err)
 		return nil, errors.TrackError(err)
 	}
 	defer rows.Close()
