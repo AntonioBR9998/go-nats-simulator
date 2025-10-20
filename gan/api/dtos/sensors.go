@@ -13,7 +13,7 @@ type SensorRequestById struct {
 }
 
 type SensorRequestBody struct {
-	ID           string  `json:"Id"`
+	ID           string  `json:"id"`
 	Type         string  `json:"type"`
 	Alias        string  `json:"alias"`
 	Rate         int     `json:"rate"`
@@ -22,7 +22,7 @@ type SensorRequestBody struct {
 }
 
 type SensorResponseBody struct {
-	ID           string  `json:"Id"`
+	ID           string  `json:"id"`
 	Type         string  `json:"type"`
 	Alias        string  `json:"alias"`
 	Rate         int     `json:"rate"`
