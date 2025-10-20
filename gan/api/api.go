@@ -21,6 +21,7 @@ const (
 	API_V1           = "/v1"
 	API_V1_BASE      = API_CONTEXT + API_V1
 	SENSORS_ENDPOINT = "/sensors"
+	METRICS_ENDPOINT = "/metrics"
 	UUID_REGEX       = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 )
 
@@ -73,12 +74,24 @@ func NewAPI(cfg config.Config, service domain.Service) Server {
 				"type":  {Type: humamw.STRING},
 				"alias": {Type: humamw.STRING},
 			},
-			[]string{"id", "type", "alias", "UpdatedAt"},
+			[]string{"id", "type", "alias", "updatedAt"},
 		),
 	))
 	huma.Delete(ganApi, SENSORS_ENDPOINT+"/{id:"+UUID_REGEX+"}", a.deleteSensor)
 
 	// Metrics endpoints
+	huma.Get(ganApi, METRICS_ENDPOINT, a.getMetricsData, humamw.UseMiddlewares(
+		humamw.UsePagination(humamw.PaginationOptions(humamw.SetMaxLimit(3000))),
+		humamw.SetHeaderUsingCallback("Total"),
+		humamw.UseFilter(
+			ganApi,
+			map[string]humamw.FilterDefinition{
+				"sensorId":  {Type: humamw.STRING},
+				"timestamp": {Type: humamw.INT},
+			},
+			[]string{"value", "timestamp"},
+		),
+	))
 
 	a.router = r
 	return a
@@ -155,3 +168,22 @@ func (a *api) deleteSensor(ctx context.Context, request *dtos.SensorRequestById)
 }
 
 // Metrics handlers
+func (a *api) getMetricsData(ctx context.Context, req *struct{}) (*APIResponse[[]*dtos.MetricResponse], error) {
+	res, err := a.service.GetMetricsData(ctx)
+
+	if err != nil {
+		log.Errorf("error in getMetricsData endpoint: %v", err)
+		apiErr := errutil.APIErrorHandler(err)
+		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
+	}
+
+	var metricsDtoList []*dtos.MetricResponse
+	for _, data := range res {
+		metricDto := dtos.ToMetricResponseDto(data)
+		metricsDtoList = append(metricsDtoList, metricDto)
+	}
+
+	return &APIResponse[[]*dtos.MetricResponse]{
+		Body: metricsDtoList,
+	}, nil
+}

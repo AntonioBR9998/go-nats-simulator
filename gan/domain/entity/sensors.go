@@ -1,7 +1,7 @@
 package entity
 
 type Sensor struct {
-	ID           string  `json:"Id"`
+	ID           string  `json:"id"`
 	Type         string  `json:"type" validate:"oneof=humidity temperature pressure"`
 	Alias        string  `json:"alias"`
 	Rate         int     `json:"rate"`
