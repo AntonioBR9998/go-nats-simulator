@@ -22,4 +22,13 @@ const (
 			` + DEVICE_FIELDS + `
         FROM devices
 		WHERE TRUE` // This botched job is neccessary for adding filters in query
+
+	// Metrics
+	METRICS_FIELDS = "sensor_id, value, unit, timestamp"
+
+	GET_METRICS = `
+		SELECT
+			` + METRICS_FIELDS + `
+		FROM metrics
+		WHERE TRUE` // This botched job is neccessary for adding filters in query
 )
