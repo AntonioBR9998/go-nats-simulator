@@ -2,16 +2,14 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humamux"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/AntonioBR9998/go-nats-simulator/errors"
+	errutil "github.com/AntonioBR9998/go-nats-simulator/errors"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/api/dtos"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain"
@@ -35,42 +33,17 @@ type Server interface {
 	Router() http.Handler
 }
 
-type Logger func(string)
-
-type logResponseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
 type APIResponse[T any] struct {
 	Body T `contentType:"application/json"`
 }
 
 type APIResponseWithoutBody struct{}
 
-func LogRequest(logger Logger) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			startTime := time.Now()
-			logRespWriter := &logResponseWriter{
-				ResponseWriter: w,
-				statusCode:     http.StatusOK,
-			}
-			next.ServeHTTP(logRespWriter, r)
-			logger(fmt.Sprintf(`"%s %s %s" - %d "%s" : %s`, r.Method, r.URL, r.Proto, logRespWriter.statusCode, r.UserAgent(), time.Since(startTime).String()))
-		})
-	}
-}
-
 func NewAPI(cfg config.Config, service domain.Service) Server {
 	a := &api{service: service}
 
 	log.Traceln("creating new *mux.Router")
 	r := mux.NewRouter()
-	log.Traceln("registering LogRequest middleware")
-	r.Use(LogRequest(func(msg string) {
-		log.Infoln(msg)
-	}))
 	log.Traceln("creating a new Subrouter for path:", API_V1_BASE)
 	apiV1 := r.PathPrefix(API_V1_BASE).Subrouter()
 
@@ -117,10 +90,16 @@ func (a *api) Router() http.Handler {
 
 // Sensors handlers
 func (a *api) createSensor(ctx context.Context, req *dtos.SensorBaseRequest) (*APIResponse[*dtos.SensorResponseBody], error) {
+	// Validating type of sensor
+	if !dtos.ValidateSensorType(req.Body.Type) {
+		return nil, huma.NewError(400, "validation error: type must be one of temperature, humidity or pressure")
+	}
+
 	res, err := a.service.CreateSensor(ctx, req.Body.ID, req.Body.Type, req.Body.Alias, req.Body.Rate, req.Body.MaxThreshold, req.Body.MinThreshold)
 
 	if err != nil {
-		apiErr := errors.APIErrorHandler(err)
+		log.Errorf("error in createSensor endpoint: %v", err)
+		apiErr := errutil.APIErrorHandler(err)
 		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
 	}
 
@@ -133,7 +112,8 @@ func (a *api) modifySensor(ctx context.Context, req *dtos.SensorBaseRequest) (*A
 	res, err := a.service.ModifySensor(ctx, req.Body.ID, req.Body.Type, req.Body.Alias, req.Body.Rate, req.Body.MaxThreshold, req.Body.MinThreshold)
 
 	if err != nil {
-		apiErr := errors.APIErrorHandler(err)
+		log.Errorf("error in modifySensor endpoint: %v", err)
+		apiErr := errutil.APIErrorHandler(err)
 		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
 	}
 
@@ -146,7 +126,8 @@ func (a *api) getSensorList(ctx context.Context, req *struct{}) (*APIResponse[[]
 	res, err := a.service.GetSensors(ctx)
 
 	if err != nil {
-		apiErr := errors.APIErrorHandler(err)
+		log.Errorf("error in getSensorList endpoint: %v", err)
+		apiErr := errutil.APIErrorHandler(err)
 		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
 	}
 
@@ -165,7 +146,8 @@ func (a *api) deleteSensor(ctx context.Context, request *dtos.SensorRequestById)
 	err := a.service.DeleteSensor(ctx, request.Id)
 
 	if err != nil {
-		apiErr := errors.APIErrorHandler(err)
+		log.Errorf("error in deleteSensor endpoint: %v", err)
+		apiErr := errutil.APIErrorHandler(err)
 		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
 	}
 
