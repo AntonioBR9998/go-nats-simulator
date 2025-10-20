@@ -5,10 +5,14 @@ import (
 )
 
 type SensorBaseRequest struct {
-	Body SensorBody `contentType:"application/json"`
+	Body SensorRequestBody `contentType:"application/json"`
 }
 
-type SensorBody struct {
+type SensorRequestById struct {
+	Id string `path:"id"`
+}
+
+type SensorRequestBody struct {
 	ID           string  `json:"Id"`
 	Type         string  `json:"type"`
 	Alias        string  `json:"alias"`
@@ -17,7 +21,7 @@ type SensorBody struct {
 	MinThreshold float32 `json:"minThreshold"`
 }
 
-type SensorResponse struct {
+type SensorResponseBody struct {
 	ID           string  `json:"Id"`
 	Type         string  `json:"type"`
 	Alias        string  `json:"alias"`
@@ -27,8 +31,8 @@ type SensorResponse struct {
 	UpdatedAt    int64   `json:"updatedAt"`
 }
 
-func ToSensorResponseDto(res *entity.Sensor) SensorResponse {
-	return SensorResponse{
+func ToSensorResponseDto(res *entity.Sensor) *SensorResponseBody {
+	return &SensorResponseBody{
 		ID:           res.ID,
 		Type:         res.Type,
 		Alias:        res.Alias,
