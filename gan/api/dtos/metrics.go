@@ -11,8 +11,8 @@ type MetricResponse struct {
 	Timestamp int64   `json:"timestamp"`
 }
 
-func ToMetricResponseDto(res *entity.Metric) MetricResponse {
-	return MetricResponse{
+func ToMetricResponseDto(res *entity.Metric) *MetricResponse {
+	return &MetricResponse{
 		SensorID:  res.SensorID,
 		Value:     res.Value,
 		Unit:      res.Unit,
