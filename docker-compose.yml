@@ -32,5 +32,14 @@ services:
     volumes:
       - ./gan/config_test.json:/etc/gan/config_test.json:ro
     restart: unless-stopped
+  nta:
+    build:
+      context: .
+      dockerfile: nta/Dockerfile
+    container_name: nta
+    depends_on:
+      - nats
+      - timescaledb
+    restart: unless-stopped
 volumes:
   timescale_data:
