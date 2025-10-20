@@ -81,7 +81,7 @@ func (m *Manager) run(id, typ string, rate int, stopCh <-chan struct{}) {
 				log.Errorf("error sending data to NATS: %v", err)
 			}
 
-			time.Sleep(time.Duration(rate))
+			time.Sleep(time.Duration(rate) * time.Second)
 		}
 	}
 }
