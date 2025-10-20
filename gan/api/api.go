@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,8 +11,11 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/AntonioBR9998/go-nats-simulator/errors"
+	"github.com/AntonioBR9998/go-nats-simulator/gan/api/dtos"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain"
+	"github.com/AntonioBR9998/go-nats-simulator/humamw"
 )
 
 const (
@@ -37,6 +41,12 @@ type logResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
 }
+
+type APIResponse[T any] struct {
+	Body T `contentType:"application/json"`
+}
+
+type APIResponseWithoutBody struct{}
 
 func LogRequest(logger Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -78,6 +88,22 @@ func NewAPI(cfg config.Config, service domain.Service) Server {
 	ganApi.UseMiddleware()
 
 	// Sensors endpoints
+	huma.Post(ganApi, SENSORS_ENDPOINT, a.createSensor)
+	huma.Put(ganApi, SENSORS_ENDPOINT, a.modifySensor)
+	huma.Get(ganApi, SENSORS_ENDPOINT, a.getSensorList, humamw.UseMiddlewares(
+		humamw.UsePagination(humamw.PaginationOptions(humamw.SetMaxLimit(3000))),
+		humamw.SetHeaderUsingCallback("Total"),
+		humamw.UseFilter(
+			ganApi,
+			map[string]humamw.FilterDefinition{
+				"id":    {Type: humamw.STRING},
+				"type":  {Type: humamw.STRING},
+				"alias": {Type: humamw.STRING},
+			},
+			[]string{"id", "type", "alias", "UpdatedAt"},
+		),
+	))
+	huma.Delete(ganApi, SENSORS_ENDPOINT+"/{id:"+UUID_REGEX+"}", a.deleteSensor)
 
 	// Metrics endpoints
 
@@ -89,4 +115,61 @@ func (a *api) Router() http.Handler {
 	return a.router
 }
 
-// Handlers
+// Sensors handlers
+func (a *api) createSensor(ctx context.Context, req *dtos.SensorBaseRequest) (*APIResponse[*dtos.SensorResponseBody], error) {
+	res, err := a.service.CreateSensor(ctx, req.Body.ID, req.Body.Type, req.Body.Alias, req.Body.Rate, req.Body.MaxThreshold, req.Body.MinThreshold)
+
+	if err != nil {
+		apiErr := errors.APIErrorHandler(err)
+		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
+	}
+
+	return &APIResponse[*dtos.SensorResponseBody]{
+		Body: dtos.ToSensorResponseDto(res),
+	}, nil
+}
+
+func (a *api) modifySensor(ctx context.Context, req *dtos.SensorBaseRequest) (*APIResponse[*dtos.SensorResponseBody], error) {
+	res, err := a.service.ModifySensor(ctx, req.Body.ID, req.Body.Type, req.Body.Alias, req.Body.Rate, req.Body.MaxThreshold, req.Body.MinThreshold)
+
+	if err != nil {
+		apiErr := errors.APIErrorHandler(err)
+		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
+	}
+
+	return &APIResponse[*dtos.SensorResponseBody]{
+		Body: dtos.ToSensorResponseDto(res),
+	}, nil
+}
+
+func (a *api) getSensorList(ctx context.Context, req *struct{}) (*APIResponse[[]*dtos.SensorResponseBody], error) {
+	res, err := a.service.GetSensors(ctx)
+
+	if err != nil {
+		apiErr := errors.APIErrorHandler(err)
+		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
+	}
+
+	var sensorDtoList []*dtos.SensorResponseBody
+	for _, sensor := range res {
+		sensorDto := dtos.ToSensorResponseDto(sensor)
+		sensorDtoList = append(sensorDtoList, sensorDto)
+	}
+
+	return &APIResponse[[]*dtos.SensorResponseBody]{
+		Body: sensorDtoList,
+	}, nil
+}
+
+func (a *api) deleteSensor(ctx context.Context, request *dtos.SensorRequestById) (*APIResponseWithoutBody, error) {
+	err := a.service.DeleteSensor(ctx, request.Id)
+
+	if err != nil {
+		apiErr := errors.APIErrorHandler(err)
+		return nil, huma.NewError(apiErr.GetStatus(), apiErr.Error())
+	}
+
+	return &APIResponseWithoutBody{}, nil
+}
+
+// Metrics handlers
