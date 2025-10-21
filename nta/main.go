@@ -87,7 +87,7 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 
-	fmt.Println("Consumidor detenido")
+	fmt.Print("consumer stopped")
 
 	defer sub.Unsubscribe()
 }
