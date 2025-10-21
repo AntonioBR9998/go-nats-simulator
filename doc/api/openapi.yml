@@ -1,0 +1,336 @@
+components:
+  parameters:
+    limit:
+      name: limit
+      in: query
+      description: "Max number of elements in the response"
+      required: false
+      schema:
+        type: integer
+        default: 10
+        minimum: 10
+        maximum: 100
+    offset:
+      name: offset
+      in: query
+      description: "Number of elements to omit in the beggining of the response list. Pagination: offset=page_number*limit"
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    filters: &Filter
+      name: filters
+      in: query
+      description: |
+        Query to filter response list. Multiple filters is allowed.<br>
+
+        Building:<br>
+        `?filters=field:filter_type:query`
+
+        Available fields are in the **endpoint description**
+
+        Filter types:
+        - eq (equal)
+        - ne (not equal)
+        - in (it is a list of elements separated by commas)
+        - like (partial equality)
+        - gt (grater)
+        - ge (grater or equal)
+        - lt (lower)
+        - le (lower or equal)
+      required: false
+      schema:
+        type: string
+        example: "id:like:7576"
+    sort: &Sort
+      name: sort
+      in: query
+      description: |
+        Used to sort the response list.<br>
+        The availables fields are in the **endpoint description**
+      required: false
+      schema:
+        type: string
+        example: "timestamp"
+    order: &Order
+      name: order
+      in: query
+      description: |
+        Fields order, if query param *sort* is present
+      required: false
+      schema:
+        type: string
+        enum: [ asc, desc ]
+
+  schemas:
+    # Sensors schemas
+    SensorRequestBody:
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - "temperature"
+          - "pressure"
+          - "humidity"
+        alias:
+          type: string
+        rate:
+          type: integer
+        maxThreshold:
+          type: number
+        minThreshold:
+          type: number
+      required:
+      - id
+      - type
+      - alias
+      - rate
+      - maxThreshold
+      - minThreshold
+      type: object
+
+    SensorResponseBody:
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - "temperature"
+          - "pressure"
+          - "humidity"
+        alias:
+          type: string
+        rate:
+          type: integer
+        maxThreshold:
+          type: integer
+        minThreshold:
+          type: integer
+        updatedAt:
+          type: integer
+      required:
+      - id
+      - type
+      - alias
+      - rate
+      - maxThreshold
+      - minThreshold
+      - updatedAt
+      type: object
+
+    # Metric schemas
+    MetricResponse:
+      additionalProperties: false
+      properties:
+        sensorId:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        timestamp:
+          type: integer
+      required:
+      - sensorId
+      - value
+      - unit
+      - timestamp
+      type: object
+
+openapi: 3.0.3
+info:
+  title: Go API NATS documentation - BACKEND
+  version: 1.0.0
+  contact:
+    url: 'https://github.com/AntonioBR9998/go-nats-simulator'
+  description: |
+    # Introduction
+    The Go NATS API is a set of HTTP endpoints that follow RESTful design principles and CRUD actions with predictable URIs. It uses standard HTTP response codes, authentication, and verbs. The API has consistent and well-formed JSON requests and responses, with cursor-based pagination to simplify list handling. Error messages are descriptive and easy to understand. All Galgus customer portal features are accessible through the API, allowing you to automate complex scenarios without supervision using any HTTP-compatible tool.
+
+    ## Requests
+    Communicate with the API by making an HTTP request to the appropriate endpoint. The method you choose determines the action to be performed.
+
+    |Method|Use|
+    |-|-|
+    | DELETE | Use the DELETE method to destroy a resource. If not found, the operation will return a 4xx error and an appropriate message.|
+    |GET| To obtain information about a resource, use the GET method. The data is returned as a JSON object. GET methods are read-only and do not affect any resources.|
+    | PATCH | Some resources support partial modification with PATCH, which modifies specific attributes without updating the entire representation of the object. |
+    |POST|Issue a POST method to create a new object. Include all necessary attributes in the request body encoded as JSON.|
+    |PUT|Use the PUT method to update
+
+    ## Response Codes
+    We use standard HTTP response codes to indicate the success or failure of requests. Response codes in the 2xx range indicate success, while codes in the 4xx range indicate an error, such as authorization failure or a malformed request. All 4xx errors return a JSON response object with an error attribute explaining the issue. Codes in the 5xx range indicate a server-side problem that prevents fulfilling your request.
+
+    |Response|Description|
+    |-|-|
+    | 200 OK	| The response contains the requested information.|
+    | 201 Created	| Your request was accepted. The resource has been created.
+    | 202 Accepted | Your request was accepted. The resource was created or updated.
+    | 204 No Content | Your request succeeded; no additional information is returned.
+    | 400 Bad Request | Your request was malformed.
+    | 404 Not Found	| No results were found for your request.
+    | 500 Internal Server Error | We were unable to fulfill the request due to a server-side issue.
+
+servers:
+- url: http://localhost:8080/api/v1
+
+paths:
+  # Sensors
+  /sensors:
+    get:
+      operationId: sensors-get
+      tags:
+      - Sensors management
+      description: |
+        Get all the available sensors in the architecture.
+
+        Available fields to filter:
+        - id: sensor UUID
+        - type: "temperature", "pressure" or "humidity" 
+        - alias: sensor alias
+
+        Available fields to order:
+        - id: sensor UUID
+        - type: "temperature", "pressure" or "humidity" 
+        - alias: sensor alias
+        - updatedAt: UNIX last time when sensor has been modified
+      parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - <<: *Filter
+      - <<: *Sort
+      - <<: *Order
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/SensorResponseBody"
+                type: array
+          description: "OK"
+        "400":
+          description: "Bad Request"
+        "500":
+          description: "Internal server error"
+      summary: "Get available sensor list"
+
+    post:
+      operationId: sensors-post
+      tags:
+      - Sensors management
+      description: |
+        Add a new sensor simulator which will emit random samples.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorRequestBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SensorResponseBody"
+          description: "OK"
+        "400":
+          description: "Bad Request"
+        "409":
+          description: "Conflict"
+        "500":
+          description: "Internal server error"
+      summary: "Create a new sensor"
+
+    put:
+      operationId: sensors-put
+      tags:
+      - Sensors management
+      description: "Modify a sensor config"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SensorResponseBody"
+          description: "OK"
+        "400":
+          description: "Bad Request"
+        "404":
+          description: "Not Found"
+        "500":
+          description: "Internal server error"
+      summary: "Modify a sensor config"
+      security:
+      - bearerAuth: []
+
+  /sensors/{id}:
+    delete:
+      operationId: sensors-delete
+      tags:
+      - Sensors management
+      description: "Delete the sensor whose ID is given in path param"
+      parameters:
+      - description: "Valid sensor UUID which will be deleted"
+        example: "11111111-2222-3333-4444-555555555555"
+        in: path
+        name: id
+        required: true
+        schema:
+          example: "11111111-2222-3333-4444-555555555555"
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: "Internal server error"
+      summary: "Delete sensor"
+
+  # Metrics
+  /metrics:
+    get:
+      operationId: metrics-get
+      tags:
+      - Historics
+      description: |
+        Get all the historic data generated by the sensors in the architecture.
+
+        Available fields to filter:
+        - sensor_id: sensor UUID
+        - timestamp: time in UNIX when the value was generated
+
+        Available fields to order:
+        - value: sensor UUID
+        - timestamp: time in UNIX when the value was generated
+      parameters:
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - <<: *Filter
+      - <<: *Sort
+      - <<: *Order
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/SensorResponseBody"
+                type: array
+          description: "OK"
+        "400":
+          description: "Bad Request"
+        "500":
+          description: "Internal server error"
+      summary: "Get available historic data"
+
+tags:
+- name: Sensors management
+  description: "Endpoint list which allow to create, edit, get or delete devices."
+- name: Historics
+  description: "Obtain an historic with the data generated by the sensors."
