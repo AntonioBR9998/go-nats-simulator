@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AntonioBR9998/go-nats-simulator/errors"
+	"github.com/AntonioBR9998/go-common/errors"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain/entity"
 	log "github.com/sirupsen/logrus"
 )
