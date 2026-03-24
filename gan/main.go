@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AntonioBR9998/go-nats-simulator/utils"
+	commonConfig "github.com/AntonioBR9998/go-common/config"
 	"github.com/nats-io/nats.go"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -61,7 +61,7 @@ func startGanService(ctx *cli.Context) error {
 	configFilePath := ctx.String("config")
 	log.Debugf("the configuration file path is: %s", configFilePath)
 	log.Infof("loading configuration from file '%s'", configFilePath)
-	cfg := utils.New(
+	cfg := commonConfig.New(
 		&config.Config{},
 		func(cfg *config.Config) {
 			cfg.ConfigPath = configFilePath

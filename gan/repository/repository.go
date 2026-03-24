@@ -8,8 +8,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	commonConfig "github.com/AntonioBR9998/go-common/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
-	"github.com/AntonioBR9998/go-nats-simulator/utils"
 )
 
 type Repository interface {
@@ -29,7 +29,7 @@ func NewRepository(cfg config.Config) Repository {
 	}
 }
 
-func NewPostgresClient(conf utils.PostgreSQLConfig) *sql.DB {
+func NewPostgresClient(conf commonConfig.PostgreSQLConfig) *sql.DB {
 	host := conf.Host
 	port := conf.Port
 	user := conf.User
