@@ -1,16 +1,16 @@
 package config
 
 import (
-	"github.com/AntonioBR9998/go-nats-simulator/utils"
+	"github.com/AntonioBR9998/go-common/config"
 )
 
 // Config represents the service configuration
 type Config struct {
-	utils.BaseConfig `mapstructure:",squash"`
+	config.BaseConfig `mapstructure:",squash"`
 
-	Nats        NatsConfig             `json:"nats"`
-	TimescaleDB utils.PostgreSQLConfig `json:"timescaleDB"`
-	ServerName  string                 `json:"serverName"`
+	Nats        NatsConfig              `json:"nats"`
+	TimescaleDB config.PostgreSQLConfig `json:"timescaleDB"`
+	ServerName  string                  `json:"serverName"`
 }
 
 type NatsConfig struct {

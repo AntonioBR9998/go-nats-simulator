@@ -9,11 +9,11 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
-	errutil "github.com/AntonioBR9998/go-nats-simulator/errors"
+	errutil "github.com/AntonioBR9998/go-common/errors"
+	"github.com/AntonioBR9998/go-common/humamw"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/api/dtos"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain"
-	"github.com/AntonioBR9998/go-nats-simulator/humamw"
 )
 
 const (

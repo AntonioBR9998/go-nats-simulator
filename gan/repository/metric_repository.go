@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AntonioBR9998/go-nats-simulator/errors"
+	"github.com/AntonioBR9998/go-common/errors"
+	"github.com/AntonioBR9998/go-common/humamw"
+	"github.com/AntonioBR9998/go-common/sql"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/domain/entity"
-	"github.com/AntonioBR9998/go-nats-simulator/humamw"
-	"github.com/AntonioBR9998/go-nats-simulator/humamw/sql"
 	log "github.com/sirupsen/logrus"
 )
 

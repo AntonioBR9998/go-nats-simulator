@@ -1,10 +1,10 @@
 package domain
 
 import (
+	"github.com/AntonioBR9998/go-common/validation"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/config"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/repository"
 	"github.com/AntonioBR9998/go-nats-simulator/gan/simulator"
-	"github.com/AntonioBR9998/go-nats-simulator/validation"
 )
 
 type Service interface {
